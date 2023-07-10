@@ -100,7 +100,7 @@ CIMGUI_API void     ImGuiBackend_ImplSDL2_NewFrame() {
 }
 
 CIMGUI_API bool     ImGuiBackend_ImplSDL2_ProcessEvent(const SDL_Event* event) {
-    ImGui_ImplSDL2_ProcessEvent(event);
+    return ImGui_ImplSDL2_ProcessEvent(event);
 }
 
 
