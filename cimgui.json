@@ -2,11 +2,11 @@
     "defines": [
         {
             "name": "IMGUI_VERSION",
-            "content": "\"1.89.8 WIP\""
+            "content": "\"1.89.7\""
         },
         {
             "name": "IMGUI_VERSION_NUM",
-            "content": "18972"
+            "content": "18971"
         },
         {
             "name": "IM_MSVC_RUNTIME_CHECKS_OFF",
@@ -376,6 +376,13 @@
                     }
                 },
                 {
+                    "name": "ImGuiWindowFlags_NoDocking",
+                    "value": "1<<21",
+                    "comments": {
+                        "attached": "// Disable docking of this window"
+                    }
+                },
+                {
                     "name": "ImGuiWindowFlags_NoNav",
                     "value": "ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus"
                 },
@@ -435,6 +442,14 @@
                     "value": "1<<28",
                     "comments": {
                         "attached": "// Don't use! For internal use by BeginMenu()"
+                    },
+                    "is_internal": true
+                },
+                {
+                    "name": "ImGuiWindowFlags_DockNodeHost",
+                    "value": "1<<29",
+                    "comments": {
+                        "attached": "// Don't use! For internal use by Begin()/NewFrame()"
                     },
                     "is_internal": true
                 }
@@ -1726,13 +1741,15 @@
                     }
                 },
                 {
-                    "name": "ImGuiFocusedFlags_RootAndChildWindows",
-                    "value": "ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows",
+                    "name": "ImGuiFocusedFlags_DockHierarchy",
+                    "value": "1<<4",
                     "comments": {
-                        "preceding": [
-                            "//ImGuiFocusedFlags_DockHierarchy               = 1 << 4,   // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)"
-                        ]
+                        "attached": "// Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)"
                     }
+                },
+                {
+                    "name": "ImGuiFocusedFlags_RootAndChildWindows",
+                    "value": "ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows"
                 }
             ],
             "comments": {
@@ -1781,12 +1798,16 @@
                     }
                 },
                 {
+                    "name": "ImGuiHoveredFlags_DockHierarchy",
+                    "value": "1<<4",
+                    "comments": {
+                        "attached": "// IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)"
+                    }
+                },
+                {
                     "name": "ImGuiHoveredFlags_AllowWhenBlockedByPopup",
                     "value": "1<<5",
                     "comments": {
-                        "preceding": [
-                            "//ImGuiHoveredFlags_DockHierarchy               = 1 << 4,   // IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)"
-                        ],
                         "attached": "// Return true even if a popup window is normally blocking access to this item/window"
                     }
                 },
@@ -1901,6 +1922,68 @@
                     "// Flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()",
                     "// Note: if you are trying to check whether your mouse should be dispatched to Dear ImGui or to your app, you should use 'io.WantCaptureMouse' instead! Please read the FAQ!",
                     "// Note: windows with the ImGuiWindowFlags_NoInputs flag are ignored by IsWindowHovered() calls."
+                ]
+            }
+        },
+        {
+            "name": "ImGuiDockNodeFlags_",
+            "original_fully_qualified_name": "ImGuiDockNodeFlags_",
+            "elements": [
+                {
+                    "name": "ImGuiDockNodeFlags_None",
+                    "value": "0"
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_KeepAliveOnly",
+                    "value": "1<<0",
+                    "comments": {
+                        "attached": "// Shared       // Don't display the dockspace node but keep it alive. Windows docked into this dockspace node won't be undocked."
+                    }
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_NoDockingInCentralNode",
+                    "value": "1<<2",
+                    "comments": {
+                        "preceding": [
+                            "//ImGuiDockNodeFlags_NoCentralNode              = 1 << 1,   // Shared       // Disable Central Node (the node which can stay empty)"
+                        ],
+                        "attached": "// Shared       // Disable docking inside the Central Node, which will be always kept empty."
+                    }
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_PassthruCentralNode",
+                    "value": "1<<3",
+                    "comments": {
+                        "attached": "// Shared       // Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0f) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details."
+                    }
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_NoSplit",
+                    "value": "1<<4",
+                    "comments": {
+                        "attached": "// Shared/Local // Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved."
+                    }
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_NoResize",
+                    "value": "1<<5",
+                    "comments": {
+                        "attached": "// Shared/Local // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces."
+                    }
+                },
+                {
+                    "name": "ImGuiDockNodeFlags_AutoHideTabBar",
+                    "value": "1<<6",
+                    "comments": {
+                        "attached": "// Shared/Local // Tab bar will automatically hide when there is a single window in the dock node."
+                    }
+                }
+            ],
+            "comments": {
+                "preceding": [
+                    "// Flags for ImGui::DockSpace(), shared/inherited by child nodes.",
+                    "// (Some flags can be applied to individual nodes directly)",
+                    "// FIXME-DOCK: Also see ImGuiDockNodeFlagsPrivate_ which may involve using the WIP and internal DockBuilder api."
                 ]
             }
         },
@@ -3123,6 +3206,41 @@
                     }
                 },
                 {
+                    "name": "ImGuiConfigFlags_DockingEnable",
+                    "value": "1<<6",
+                    "comments": {
+                        "preceding": [
+                            "// [BETA] Docking"
+                        ],
+                        "attached": "// Docking enable flags."
+                    }
+                },
+                {
+                    "name": "ImGuiConfigFlags_ViewportsEnable",
+                    "value": "1<<10",
+                    "comments": {
+                        "preceding": [
+                            "// [BETA] Viewports",
+                            "// When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable."
+                        ],
+                        "attached": "// Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)"
+                    }
+                },
+                {
+                    "name": "ImGuiConfigFlags_DpiEnableScaleViewports",
+                    "value": "1<<14",
+                    "comments": {
+                        "attached": "// [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application."
+                    }
+                },
+                {
+                    "name": "ImGuiConfigFlags_DpiEnableScaleFonts",
+                    "value": "1<<15",
+                    "comments": {
+                        "attached": "// [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress."
+                    }
+                },
+                {
                     "name": "ImGuiConfigFlags_IsSRGB",
                     "value": "1<<20",
                     "comments": {
@@ -3180,6 +3298,30 @@
                     "value": "1<<3",
                     "comments": {
                         "attached": "// Backend Renderer supports ImDrawCmd::VtxOffset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices."
+                    }
+                },
+                {
+                    "name": "ImGuiBackendFlags_PlatformHasViewports",
+                    "value": "1<<10",
+                    "comments": {
+                        "preceding": [
+                            "// [BETA] Viewports"
+                        ],
+                        "attached": "// Backend Platform supports multiple viewports."
+                    }
+                },
+                {
+                    "name": "ImGuiBackendFlags_HasMouseHoveredViewport",
+                    "value": "1<<11",
+                    "comments": {
+                        "attached": "// Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under."
+                    }
+                },
+                {
+                    "name": "ImGuiBackendFlags_RendererHasViewports",
+                    "value": "1<<12",
+                    "comments": {
+                        "attached": "// Backend Renderer supports multiple viewports."
                     }
                 }
             ],
@@ -3327,6 +3469,18 @@
                 },
                 {
                     "name": "ImGuiCol_TabUnfocusedActive"
+                },
+                {
+                    "name": "ImGuiCol_DockingPreview",
+                    "comments": {
+                        "attached": "// Preview overlay color when about to docking something"
+                    }
+                },
+                {
+                    "name": "ImGuiCol_DockingEmptyBg",
+                    "comments": {
+                        "attached": "// Background color for empty node (e.g. CentralNode with no window docked into it)"
+                    }
                 },
                 {
                     "name": "ImGuiCol_PlotLines"
@@ -4303,7 +4457,87 @@
                     "name": "ImGuiViewportFlags_OwnedByApp",
                     "value": "1<<2",
                     "comments": {
-                        "attached": "// Platform Window: is created/managed by the application (rather than a dear imgui backend)"
+                        "attached": "// Platform Window: Was created/managed by the user application? (rather than our backend)"
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoDecoration",
+                    "value": "1<<3",
+                    "comments": {
+                        "attached": "// Platform Window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)"
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoTaskBarIcon",
+                    "value": "1<<4",
+                    "comments": {
+                        "attached": "// Platform Window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)"
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoFocusOnAppearing",
+                    "value": "1<<5",
+                    "comments": {
+                        "attached": "// Platform Window: Don't take focus when created."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoFocusOnClick",
+                    "value": "1<<6",
+                    "comments": {
+                        "attached": "// Platform Window: Don't take focus when clicked on."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoInputs",
+                    "value": "1<<7",
+                    "comments": {
+                        "attached": "// Platform Window: Make mouse pass through so we can drag this window while peaking behind it."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoRendererClear",
+                    "value": "1<<8",
+                    "comments": {
+                        "attached": "// Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely)."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_NoAutoMerge",
+                    "value": "1<<9",
+                    "comments": {
+                        "attached": "// Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!)."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_TopMost",
+                    "value": "1<<10",
+                    "comments": {
+                        "attached": "// Platform Window: Display on top (for tooltips only)."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_CanHostOtherWindows",
+                    "value": "1<<11",
+                    "comments": {
+                        "attached": "// Viewport can host multiple imgui windows (secondary viewports are associated to a single window). // FIXME: In practice there's still probably code making the assumption that this is always and only on the MainViewport. Will fix once we add support for \"no main viewport\"."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_IsMinimized",
+                    "value": "1<<12",
+                    "comments": {
+                        "preceding": [
+                            "// Output status flags (from Platform)"
+                        ],
+                        "attached": "// Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport."
+                    }
+                },
+                {
+                    "name": "ImGuiViewportFlags_IsFocused",
+                    "value": "1<<13",
+                    "comments": {
+                        "attached": "// Platform Window: Window is focused (last call to Platform_GetWindowFocus() returned true)"
                     }
                 }
             ],
@@ -4689,6 +4923,15 @@
             },
             "comments": {
                 "attached": "// -> enum ImGuiComboFlags_      // Flags: for BeginCombo()"
+            }
+        },
+        {
+            "name": "ImGuiDockNodeFlags",
+            "type": {
+                "declaration": "int"
+            },
+            "comments": {
+                "attached": "// -> enum ImGuiDockNodeFlags_   // Flags: for DockSpace()"
             }
         },
         {
@@ -6072,6 +6315,98 @@
             ]
         },
         {
+            "name": "ImVector_ImGuiPlatformMonitor",
+            "original_fully_qualified_name": "ImVector<ImGuiPlatformMonitor>",
+            "type": "struct",
+            "by_value": false,
+            "forward_declaration": false,
+            "is_anonymous": false,
+            "fields": [
+                {
+                    "names": [
+                        {
+                            "name": "Size",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "int"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Capacity",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "int"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Data",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiPlatformMonitor*"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ImVector_ImGuiViewportPtr",
+            "original_fully_qualified_name": "ImVector<ImGuiViewport*>",
+            "type": "struct",
+            "by_value": false,
+            "forward_declaration": false,
+            "is_anonymous": false,
+            "fields": [
+                {
+                    "names": [
+                        {
+                            "name": "Size",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "int"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Capacity",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "int"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Data",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiViewport**"
+                    }
+                }
+            ]
+        },
+        {
             "name": "ImGuiStyle",
             "original_fully_qualified_name": "ImGuiStyle",
             "type": "struct",
@@ -6646,7 +6981,7 @@
                         "declaration": "float"
                     },
                     "comments": {
-                        "attached": "// Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later."
+                        "attached": "// Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later."
                     }
                 },
                 {
@@ -7101,6 +7436,132 @@
                 {
                     "names": [
                         {
+                            "name": "ConfigDockingNoSplit",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// Docking options (when ImGuiConfigFlags_DockingEnable is set)"
+                        ],
+                        "attached": "// = false          // Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigDockingWithShift",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = false          // Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigDockingAlwaysTabBar",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigDockingTransparentPayload",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigViewportsNoAutoMerge",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)"
+                        ],
+                        "attached": "// = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigViewportsNoTaskBarIcon",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigViewportsNoDecoration",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size)."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ConfigViewportsNoDefaultParent",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows."
+                    }
+                },
+                {
+                    "names": [
+                        {
                             "name": "MouseDrawCursor",
                             "is_array": false
                         }
@@ -7384,7 +7845,7 @@
                     },
                     "comments": {
                         "preceding": [
-                            "// Options to audit .ini data"
+                            "// Option to audit .ini data"
                         ],
                         "attached": "// = false          // Save .ini data with extra comments (particularly helpful for Docking, but makes saving slower)"
                     }
@@ -7987,6 +8448,21 @@
                 {
                     "names": [
                         {
+                            "name": "MouseHoveredViewport",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "comments": {
+                        "attached": "// (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows)."
+                    }
+                },
+                {
+                    "names": [
+                        {
                             "name": "KeyCtrl",
                             "is_array": false
                         }
@@ -8297,6 +8773,22 @@
                     },
                     "comments": {
                         "attached": "// Previous time the mouse button has been down"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "MouseDragMaxDistanceAbs",
+                            "is_array": true,
+                            "array_bounds": "5"
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVec2"
+                    },
+                    "comments": {
+                        "attached": "// Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point"
                     }
                 },
                 {
@@ -8718,6 +9210,147 @@
                 "preceding": [
                     "// Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().",
                     "// NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough."
+                ]
+            }
+        },
+        {
+            "name": "ImGuiWindowClass",
+            "original_fully_qualified_name": "ImGuiWindowClass",
+            "type": "struct",
+            "by_value": false,
+            "forward_declaration": false,
+            "is_anonymous": false,
+            "fields": [
+                {
+                    "names": [
+                        {
+                            "name": "ClassId",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "comments": {
+                        "attached": "// User data. 0 = Default class (unclassed). Windows of different classes cannot be docked with each others."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ParentViewportId",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "comments": {
+                        "attached": "// Hint for the platform backend. -1: use default. 0: request platform backend to not parent the platform. != 0: request platform backend to create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ViewportFlagsOverrideSet",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiViewportFlags"
+                    },
+                    "comments": {
+                        "attached": "// Viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ViewportFlagsOverrideClear",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiViewportFlags"
+                    },
+                    "comments": {
+                        "attached": "// Viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "TabItemFlagsOverrideSet",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiTabItemFlags"
+                    },
+                    "comments": {
+                        "attached": "// [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "DockNodeFlagsOverrideSet",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiDockNodeFlags"
+                    },
+                    "comments": {
+                        "attached": "// [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "DockingAlwaysTabBar",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "DockingAllowUnclassed",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?"
+                    }
+                }
+            ],
+            "comments": {
+                "preceding": [
+                    "// [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.",
+                    "// Important: the content of this class is still highly WIP and likely to change and be refactored",
+                    "// before we stabilize Docking features. Please be mindful if using this.",
+                    "// Provide hints:",
+                    "// - To the platform backend via altered viewport flags (enable/disable OS decoration, OS task bar icons, etc.)",
+                    "// - To the platform backend for OS level parent/child relationships of viewport.",
+                    "// - To the docking system for various options and filtering."
                 ]
             }
         },
@@ -10147,6 +10780,21 @@
                     "comments": {
                         "attached": "// Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display."
                     }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "OwnerViewport",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiViewport*"
+                    },
+                    "comments": {
+                        "attached": "// Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not)."
+                    }
                 }
             ],
             "comments": {
@@ -11446,6 +12094,21 @@
                 {
                     "names": [
                         {
+                            "name": "ID",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "comments": {
+                        "attached": "// Unique identifier for the viewport"
+                    }
+                },
+                {
+                    "names": [
+                        {
                             "name": "Flags",
                             "is_array": false
                         }
@@ -11521,7 +12184,52 @@
                 {
                     "names": [
                         {
-                            "name": "PlatformHandleRaw",
+                            "name": "DpiScale",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "float"
+                    },
+                    "comments": {
+                        "attached": "// 1.0f = 96 DPI = No extra scale."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "ParentViewportId",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "comments": {
+                        "attached": "// (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "DrawData",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImDrawData*"
+                    },
+                    "comments": {
+                        "attached": "// The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame()."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "RendererUserData",
                             "is_array": false
                         }
                     ],
@@ -11531,21 +12239,1082 @@
                     },
                     "comments": {
                         "preceding": [
-                            "// Platform/Backend Dependent Data"
+                            "// Platform/Backend Dependent Data",
+                            "// Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.",
+                            "// When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled",
+                            "// by the same system and you may not need to use all the UserData/Handle fields.",
+                            "// The library never uses those fields, they are merely storage to facilitate backend implementation."
                         ],
-                        "attached": "// void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms)"
+                        "attached": "// void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformUserData",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "comments": {
+                        "attached": "// void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformHandle",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "comments": {
+                        "attached": "// void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformHandleRaw",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "comments": {
+                        "attached": "// void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformWindowCreated",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Platform window has been created (Platform_CreateWindow() has been called). This is false during the first frame where a viewport is being created."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformRequestMove",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformRequestResize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformRequestClose",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool"
+                    },
+                    "comments": {
+                        "attached": "// Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)"
                     }
                 }
             ],
             "comments": {
                 "preceding": [
                     "// - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.",
-                    "// - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.",
+                    "// - With multi-viewport enabled, we extend this concept to have multiple active viewports.",
                     "// - In the future we will extend this concept further to also represent Platform Monitor and support a \"no main platform window\" operation mode.",
                     "// - About Main Area vs Work Area:",
                     "//   - Main Area = entire viewport.",
                     "//   - Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).",
                     "//   - Windows are generally trying to stay within the Work Area of their host viewport."
+                ]
+            }
+        },
+        {
+            "name": "ImGuiPlatformIO",
+            "original_fully_qualified_name": "ImGuiPlatformIO",
+            "type": "struct",
+            "by_value": false,
+            "forward_declaration": false,
+            "is_anonymous": false,
+            "fields": [
+                {
+                    "names": [
+                        {
+                            "name": "Platform_CreateWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_CreateWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// Platform function --------------------------------------------------- Called by -----"
+                        ],
+                        "attached": "// . . U . .  // Create a new platform window for the given viewport"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_DestroyWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_DestroyWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . U . D  //"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_ShowWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_ShowWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SetWindowPos",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "pos",
+                                    "type": {
+                                        "declaration": "ImVec2"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // Set platform window position (given the upper-left corner of client area)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_GetWindowPos",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVec2 (*Platform_GetWindowPos)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "ImVec2"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . . . .  //"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SetWindowSize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "size",
+                                    "type": {
+                                        "declaration": "ImVec2"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_GetWindowSize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVec2 (*Platform_GetWindowSize)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "ImVec2"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . . . .  // Get platform window client area size"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SetWindowFocus",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SetWindowFocus)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . . . .  // Move window to front and set input focus"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_GetWindowFocus",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool (*Platform_GetWindowFocus)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "bool"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  //"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_GetWindowMinimized",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "bool (*Platform_GetWindowMinimized)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "bool"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SetWindowTitle",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "str",
+                                    "type": {
+                                        "declaration": "const char*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // Set platform window title (given an UTF-8 string)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SetWindowAlpha",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "alpha",
+                                    "type": {
+                                        "declaration": "float"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_UpdateWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_UpdateWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_RenderWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "render_arg",
+                                    "type": {
+                                        "declaration": "void*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a \"current\" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault()."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_SwapBuffers",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "render_arg",
+                                    "type": {
+                                        "declaration": "void*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault()."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_GetWindowDpiScale",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "float (*Platform_GetWindowDpiScale)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "float"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0f = 96 DPI."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_OnChangedViewport",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Platform_OnChangedViewport)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Platform_CreateVkSurface",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "int (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "int"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "vk_inst",
+                                    "type": {
+                                        "declaration": "ImU64"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "vk_allocators",
+                                    "type": {
+                                        "declaration": "const void*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "out_vk_surface",
+                                    "type": {
+                                        "declaration": "ImU64*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both)."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Renderer_CreateWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Renderer_CreateWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)"
+                        ],
+                        "attached": "// . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Renderer_DestroyWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Renderer_DestroyWindow)(ImGuiViewport* vp)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Renderer_SetWindowSize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "size",
+                                    "type": {
+                                        "declaration": "ImVec2"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Renderer_RenderWindow",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "render_arg",
+                                    "type": {
+                                        "declaration": "void*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault()."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Renderer_SwapBuffers",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg)",
+                        "type_details": {
+                            "flavour": "function_pointer",
+                            "return_type": {
+                                "declaration": "void"
+                            },
+                            "arguments": [
+                                {
+                                    "name": "vp",
+                                    "type": {
+                                        "declaration": "ImGuiViewport*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                },
+                                {
+                                    "name": "render_arg",
+                                    "type": {
+                                        "declaration": "void*"
+                                    },
+                                    "is_array": false,
+                                    "is_varargs": false
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "attached": "// . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault()."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Monitors",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVector_ImGuiPlatformMonitor"
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// (Optional) Monitor list",
+                            "// - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.",
+                            "// - Used by: dear imgui to query DPI info, clamp popups/tooltips within same monitor and not have them straddle monitors."
+                        ]
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "Viewports",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVector_ImGuiViewportPtr"
+                    },
+                    "comments": {
+                        "preceding": [
+                            "// Viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)",
+                            "// (in the future we will attempt to organize this feature to remove the need for a \"main viewport\")"
+                        ],
+                        "attached": "// Main viewports, followed by all secondary viewports."
+                    }
+                }
+            ],
+            "comments": {
+                "preceding": [
+                    "// (Optional) Access via ImGui::GetPlatformIO()"
+                ]
+            }
+        },
+        {
+            "name": "ImGuiPlatformMonitor",
+            "original_fully_qualified_name": "ImGuiPlatformMonitor",
+            "type": "struct",
+            "by_value": false,
+            "forward_declaration": false,
+            "is_anonymous": false,
+            "fields": [
+                {
+                    "names": [
+                        {
+                            "name": "MainPos",
+                            "is_array": false
+                        },
+                        {
+                            "name": "MainSize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVec2"
+                    },
+                    "comments": {
+                        "attached": "// Coordinates of the area displayed on this monitor (Min = upper left, Max = bottom right)"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "WorkPos",
+                            "is_array": false
+                        },
+                        {
+                            "name": "WorkSize",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "ImVec2"
+                    },
+                    "comments": {
+                        "attached": "// Coordinates without task bars / side bars / menu bars. Used to avoid positioning popups/tooltips inside this region. If you don't have this info, please copy the value for MainPos/MainSize."
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "DpiScale",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "float"
+                    },
+                    "comments": {
+                        "attached": "// 1.0f = 96 DPI"
+                    }
+                },
+                {
+                    "names": [
+                        {
+                            "name": "PlatformHandle",
+                            "is_array": false
+                        }
+                    ],
+                    "is_anonymous": false,
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "comments": {
+                        "attached": "// Backend dependant data (e.g. HMONITOR, GLFWmonitor*, SDL Display Index, NSScreen*)"
+                    }
+                }
+            ],
+            "comments": {
+                "preceding": [
+                    "// (Optional) This is required when enabling multi-viewport. Represent the bounds of each connected monitor/display and their DPI.",
+                    "// We use this information for multiple DPI support + clamping the position of popups and tooltips so they don't straddle multiple monitors."
                 ]
             }
         },
@@ -12384,6 +14153,21 @@
             }
         },
         {
+            "name": "ImGui_GetWindowDpiScale",
+            "original_fully_qualified_name": "ImGui::GetWindowDpiScale",
+            "return_type": {
+                "declaration": "float"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// get DPI scale currently associated to the current window's viewport."
+            }
+        },
+        {
             "name": "ImGui_GetWindowPos",
             "original_fully_qualified_name": "ImGui::GetWindowPos",
             "return_type": {
@@ -12441,6 +14225,21 @@
             "has_imstr_helper": false,
             "comments": {
                 "attached": "// get current window height (shortcut for GetWindowSize().y)"
+            }
+        },
+        {
+            "name": "ImGui_GetWindowViewport",
+            "original_fully_qualified_name": "ImGui::GetWindowViewport",
+            "return_type": {
+                "declaration": "ImGuiViewport*"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// get viewport currently associated to the current window."
             }
         },
         {
@@ -12723,6 +14522,30 @@
             "has_imstr_helper": false,
             "comments": {
                 "attached": "// set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground."
+            }
+        },
+        {
+            "name": "ImGui_SetNextWindowViewport",
+            "original_fully_qualified_name": "ImGui::SetNextWindowViewport",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [
+                {
+                    "name": "viewport_id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// set next window viewport"
             }
         },
         {
@@ -24179,6 +26002,232 @@
             }
         },
         {
+            "name": "ImGui_DockSpace",
+            "original_fully_qualified_name": "ImGui::DockSpace",
+            "return_type": {
+                "declaration": "ImGuiID"
+            },
+            "arguments": [
+                {
+                    "name": "id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": true,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "preceding": [
+                    "// Docking",
+                    "// [BETA API] Enable with io.ConfigFlags |= ImGuiConfigFlags_DockingEnable.",
+                    "// Note: You can use most Docking facilities without calling any API. You DO NOT need to call DockSpace() to use Docking!",
+                    "// - Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking/undocking.",
+                    "// - Drag from window menu button (upper-left button) to undock an entire node (all windows).",
+                    "// - When io.ConfigDockingWithShift == true, you instead need to hold SHIFT to _enable_ docking/undocking.",
+                    "// About dockspaces:",
+                    "// - Use DockSpace() to create an explicit dock node _within_ an existing window. See Docking demo for details.",
+                    "// - Use DockSpaceOverViewport() to create an explicit dock node covering the screen or a specific viewport.",
+                    "//   This is often used with ImGuiDockNodeFlags_PassthruCentralNode.",
+                    "// - Important: Dockspaces need to be submitted _before_ any window they can host. Submit it early in your frame!",
+                    "// - Important: Dockspaces need to be kept alive if hidden, otherwise windows docked into it will be undocked.",
+                    "//   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly."
+                ],
+                "attached": "// Implied size = ImVec2(0, 0), flags = 0, window_class = NULL"
+            }
+        },
+        {
+            "name": "ImGui_DockSpaceEx",
+            "original_fully_qualified_name": "ImGui::DockSpace",
+            "return_type": {
+                "declaration": "ImGuiID"
+            },
+            "arguments": [
+                {
+                    "name": "id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                },
+                {
+                    "name": "size",
+                    "type": {
+                        "declaration": "ImVec2"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "ImVec2(0, 0)"
+                },
+                {
+                    "name": "flags",
+                    "type": {
+                        "declaration": "ImGuiDockNodeFlags"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "0"
+                },
+                {
+                    "name": "window_class",
+                    "type": {
+                        "declaration": "const ImGuiWindowClass*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "NULL"
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false
+        },
+        {
+            "name": "ImGui_DockSpaceOverViewport",
+            "original_fully_qualified_name": "ImGui::DockSpaceOverViewport",
+            "return_type": {
+                "declaration": "ImGuiID"
+            },
+            "arguments": [],
+            "is_default_argument_helper": true,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// Implied viewport = NULL, flags = 0, window_class = NULL"
+            }
+        },
+        {
+            "name": "ImGui_DockSpaceOverViewportEx",
+            "original_fully_qualified_name": "ImGui::DockSpaceOverViewport",
+            "return_type": {
+                "declaration": "ImGuiID"
+            },
+            "arguments": [
+                {
+                    "name": "viewport",
+                    "type": {
+                        "declaration": "const ImGuiViewport*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "NULL"
+                },
+                {
+                    "name": "flags",
+                    "type": {
+                        "declaration": "ImGuiDockNodeFlags"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "0"
+                },
+                {
+                    "name": "window_class",
+                    "type": {
+                        "declaration": "const ImGuiWindowClass*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "NULL"
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false
+        },
+        {
+            "name": "ImGui_SetNextWindowDockID",
+            "original_fully_qualified_name": "ImGui::SetNextWindowDockID",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [
+                {
+                    "name": "dock_id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                },
+                {
+                    "name": "cond",
+                    "type": {
+                        "declaration": "ImGuiCond"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "0"
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// set next window dock id"
+            }
+        },
+        {
+            "name": "ImGui_SetNextWindowClass",
+            "original_fully_qualified_name": "ImGui::SetNextWindowClass",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [
+                {
+                    "name": "window_class",
+                    "type": {
+                        "declaration": "const ImGuiWindowClass*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// set next window class (control docking compatibility + provide hints to platform backend via custom viewport flags and platform parent/child relationship)"
+            }
+        },
+        {
+            "name": "ImGui_GetWindowDockID",
+            "original_fully_qualified_name": "ImGui::GetWindowDockID",
+            "return_type": {
+                "declaration": "ImGuiID"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false
+        },
+        {
+            "name": "ImGui_IsWindowDocked",
+            "original_fully_qualified_name": "ImGui::IsWindowDocked",
+            "return_type": {
+                "declaration": "bool"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// is current window docked into another window?"
+            }
+        },
+        {
             "name": "ImGui_LogToTTY",
             "original_fully_qualified_name": "ImGui::LogToTTY",
             "return_type": {
@@ -25033,7 +27082,7 @@
                 "preceding": [
                     "// Background/Foreground Draw Lists"
                 ],
-                "attached": "// this draw list will be the first rendered one. Useful to quickly draw shapes/text behind dear imgui contents."
+                "attached": "// get background draw list for the viewport associated to the current window. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents."
             }
         },
         {
@@ -25048,7 +27097,55 @@
             "is_imstr_helper": false,
             "has_imstr_helper": false,
             "comments": {
-                "attached": "// this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents."
+                "attached": "// get foreground draw list for the viewport associated to the current window. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents."
+            }
+        },
+        {
+            "name": "ImGui_GetBackgroundDrawListImGuiViewportPtr",
+            "original_fully_qualified_name": "ImGui::GetBackgroundDrawList",
+            "return_type": {
+                "declaration": "ImDrawList*"
+            },
+            "arguments": [
+                {
+                    "name": "viewport",
+                    "type": {
+                        "declaration": "ImGuiViewport*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents."
+            }
+        },
+        {
+            "name": "ImGui_GetForegroundDrawListImGuiViewportPtr",
+            "original_fully_qualified_name": "ImGui::GetForegroundDrawList",
+            "return_type": {
+                "declaration": "ImDrawList*"
+            },
+            "arguments": [
+                {
+                    "name": "viewport",
+                    "type": {
+                        "declaration": "ImGuiViewport*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents."
             }
         },
         {
@@ -26562,6 +28659,153 @@
             "has_imstr_helper": false
         },
         {
+            "name": "ImGui_GetPlatformIO",
+            "original_fully_qualified_name": "ImGui::GetPlatformIO",
+            "return_type": {
+                "declaration": "ImGuiPlatformIO*"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "preceding": [
+                    "// (Optional) Platform/OS interface for multi-viewport support",
+                    "// Read comments around the ImGuiPlatformIO structure for more details.",
+                    "// Note: You may use GetWindowViewport() to get the current viewport of the current window."
+                ],
+                "attached": "// platform/renderer functions, for backend to setup + viewports list."
+            }
+        },
+        {
+            "name": "ImGui_UpdatePlatformWindows",
+            "original_fully_qualified_name": "ImGui::UpdatePlatformWindows",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// call in main loop. will call CreateWindow/ResizeWindow/etc. platform functions for each secondary viewport, and DestroyWindow for each inactive viewport."
+            }
+        },
+        {
+            "name": "ImGui_RenderPlatformWindowsDefault",
+            "original_fully_qualified_name": "ImGui::RenderPlatformWindowsDefault",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [],
+            "is_default_argument_helper": true,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// Implied platform_render_arg = NULL, renderer_render_arg = NULL"
+            }
+        },
+        {
+            "name": "ImGui_RenderPlatformWindowsDefaultEx",
+            "original_fully_qualified_name": "ImGui::RenderPlatformWindowsDefault",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [
+                {
+                    "name": "platform_render_arg",
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "NULL"
+                },
+                {
+                    "name": "renderer_render_arg",
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false,
+                    "default_value": "NULL"
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// call in main loop. will call RenderWindow/SwapBuffers platform functions for each secondary viewport which doesn't have the ImGuiViewportFlags_Minimized flag set. May be reimplemented by user for custom rendering needs."
+            }
+        },
+        {
+            "name": "ImGui_DestroyPlatformWindows",
+            "original_fully_qualified_name": "ImGui::DestroyPlatformWindows",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// call DestroyWindow platform functions for all viewports. call from backend Shutdown() if you need to close platform windows before imgui shutdown. otherwise will be called by DestroyContext()."
+            }
+        },
+        {
+            "name": "ImGui_FindViewportByID",
+            "original_fully_qualified_name": "ImGui::FindViewportByID",
+            "return_type": {
+                "declaration": "ImGuiViewport*"
+            },
+            "arguments": [
+                {
+                    "name": "id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// this is a helper for backends."
+            }
+        },
+        {
+            "name": "ImGui_FindViewportByPlatformHandle",
+            "original_fully_qualified_name": "ImGui::FindViewportByPlatformHandle",
+            "return_type": {
+                "declaration": "ImGuiViewport*"
+            },
+            "arguments": [
+                {
+                    "name": "platform_handle",
+                    "type": {
+                        "declaration": "void*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// this is a helper for backends. the type platform_handle is decided by the backend (e.g. HWND, MyWindow*, GLFWwindow* etc.)"
+            }
+        },
+        {
             "name": "ImVector_Construct",
             "original_fully_qualified_name": "ImVector_Construct",
             "return_type": {
@@ -26916,6 +29160,38 @@
             }
         },
         {
+            "name": "ImGuiIO_AddMouseViewportEvent",
+            "original_fully_qualified_name": "AddMouseViewportEvent",
+            "return_type": {
+                "declaration": "void"
+            },
+            "arguments": [
+                {
+                    "name": "self",
+                    "type": {
+                        "declaration": "ImGuiIO*"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                },
+                {
+                    "name": "id",
+                    "type": {
+                        "declaration": "ImGuiID"
+                    },
+                    "is_array": false,
+                    "is_varargs": false
+                }
+            ],
+            "is_default_argument_helper": false,
+            "is_manual_helper": false,
+            "is_imstr_helper": false,
+            "has_imstr_helper": false,
+            "comments": {
+                "attached": "// Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support)."
+            }
+        },
+        {
             "name": "ImGuiIO_AddFocusEvent",
             "original_fully_qualified_name": "AddFocusEvent",
             "return_type": {
@@ -27181,8 +29457,8 @@
             }
         },
         {
-            "name": "ImGuiIO_ClearEventsQueue",
-            "original_fully_qualified_name": "ClearEventsQueue",
+            "name": "ImGuiIO_ClearInputCharacters",
+            "original_fully_qualified_name": "ClearInputCharacters",
             "return_type": {
                 "declaration": "void"
             },
@@ -27201,7 +29477,7 @@
             "is_imstr_helper": false,
             "has_imstr_helper": false,
             "comments": {
-                "attached": "// Clear all incoming events."
+                "attached": "// [Internal] Clear the text input buffer manually"
             }
         },
         {
@@ -27225,38 +29501,8 @@
             "is_imstr_helper": false,
             "has_imstr_helper": false,
             "comments": {
-                "attached": "// Clear current keyboard/mouse/gamepad state + current frame text input buffer. Equivalent to releasing all keys/buttons."
+                "attached": "// [Internal] Release all keys"
             }
-        },
-        {
-            "name": "ImGuiIO_ClearInputCharacters",
-            "original_fully_qualified_name": "ClearInputCharacters",
-            "return_type": {
-                "declaration": "void"
-            },
-            "arguments": [
-                {
-                    "name": "self",
-                    "type": {
-                        "declaration": "ImGuiIO*"
-                    },
-                    "is_array": false,
-                    "is_varargs": false
-                }
-            ],
-            "is_default_argument_helper": false,
-            "is_manual_helper": false,
-            "is_imstr_helper": false,
-            "has_imstr_helper": false,
-            "comments": {
-                "attached": "// [Obsolete] Clear the current frame text input buffer. Now included within ClearInputKeys()."
-            },
-            "conditionals": [
-                {
-                    "condition": "ifndef",
-                    "expression": "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"
-                }
-            ]
         },
         {
             "name": "ImGuiInputTextCallbackData_DeleteChars",
