@@ -1,6 +1,6 @@
 #include "cimgui_backend.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdl2.h"
 
 //// imgui_impl_opengl3
 // Backend API
